@@ -89,7 +89,7 @@ static inline uint8_t getPort ( const char port )
 	{
 			return ( REGB );
 	}
-	return ( 0xff )
+	return ( 0xff );
 }
 
 static int configPort ( const int mcp23017 )
