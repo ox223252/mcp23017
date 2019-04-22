@@ -192,7 +192,7 @@ int gpioSetPol ( const int mcp23017, const char port , const uint8_t id, const u
 	return ( write ( mcp23017, buf, 2 ) != 2 );
 }
 
-int gpioSetInt ( const int mcp23017, const char port, const uint8_t id, const uint8_t mode )
+int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, const mcp23017InterruptType mode )
 { // GPINTEN + DEFVAL + INTCON
 	uint8_t buf[ 2 ];
 	buf[ 0 ] = getPort ( port );
@@ -311,7 +311,7 @@ int gpioSetPullUp ( const int mcp23017, const char port, const uint8_t id, const
 	return ( write ( mcp23017, buf, 2 ) != 2 );
 }
 
-uint8_t getInteruptsStatus ( const int mcp23017, const char port )
+uint8_t getInterruptsStatus ( const int mcp23017, const char port )
 { // INTF
 	uint8_t buf[ 2 ];
 	buf[ 0 ] = getPort ( port );
@@ -330,7 +330,7 @@ uint8_t getInteruptsStatus ( const int mcp23017, const char port )
 	return ( buf[ 1 ] );
 }
 
-uint8_t getInteruptsValue ( const int mcp23017, const char port )
+uint8_t getInterruptsValue ( const int mcp23017, const char port )
 { // INTCAP
 	uint8_t buf[ 2 ];
 	buf[ 0 ] = getPort ( port );

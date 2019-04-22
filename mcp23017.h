@@ -32,7 +32,7 @@
 
 #define iT(type) mcp23017_IT_##type
 
-enum
+typedef enum
 {
 	mcp23017_IT_off,
 	mcp23017_IT_edges,
@@ -41,7 +41,7 @@ enum
 }
 mcp23017InterruptType;
 
-enum
+typedef enum
 {
 	mcp23017_OUTPUT,
 	mcp23017_INPUT
@@ -99,18 +99,18 @@ int gpioSetPol ( const int mcp23017, const char port , const uint8_t id,
 	const uint8_t mode );
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn int gpioSetPol ( const int mcp23017, const char port, const uint8_t id,
-///     const uint8_t mode );
+/// \fn int gpioSetInterrupts ( const int mcp23017, const char port,
+///     const uint8_t id, const mcp23017InterruptType mode );
 /// \param[ in ] mcp23017: file descriptor to access to device
 /// \param[ in ] port: GPIO port ( 'A' / 'B' )
 /// \param[ in ] id: GPIO pin id on port [ 0 ; 7 ]
-/// \param[ in ] mode: 1 active low / 0 active high
-/// \breif Set GPIO pin polarity
+/// \param[ in ] mode: interrupt trigger mode
+/// \breif Set GPIO interupts trigger mode
 /// \return 0: OK
 ///         else see errno
 ////////////////////////////////////////////////////////////////////////////////
-int gpioSetInt ( const int mcp23017, const char port, const uint8_t id, 
-	const uint8_t mode );
+int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, 
+	const mcp23017InterruptType mode );
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \fn int gpioSetPol ( const int mcp23017, const char port, const uint8_t id,
@@ -127,22 +127,22 @@ int gpioSetPullUp ( const int mcp23017, const char port, const uint8_t id,
 	const uint8_t mode );
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn int getInteruptsStatus ( const int mcp23017, const char port );
+/// \fn int getInterruptsStatus ( const int mcp23017, const char port );
 /// \param[ in ] mcp23017: file descriptor to access to device
 /// \param[ in ] port: GPIO port ( 'A' / 'B' )
 /// \breif Get interrupt flags status
 /// \return flags status or 0 if fail
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t getInteruptsStatus ( const int mcp23017, const char port );
+uint8_t getInterruptsStatus ( const int mcp23017, const char port );
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn int getInteruptsValue ( const int mcp23017, const char port );
+/// \fn int getInterruptsValue ( const int mcp23017, const char port );
 /// \param[ in ] mcp23017: file descriptor to access to device
 /// \param[ in ] port: GPIO port ( 'A' / 'B' )
 /// \breif Get GPIO value when interrupt occured
 /// \return value catched or 0 if failed
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t getInteruptsValue ( const int mcp23017, const char port );
+uint8_t getInterruptsValue ( const int mcp23017, const char port );
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \fn int gpioSet ( const int mcp23017, const char port, const uint8_t id, 
