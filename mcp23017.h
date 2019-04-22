@@ -41,6 +41,13 @@ enum
 }
 mcp23017InterruptType;
 
+enum
+{
+	mcp23017_OUTPUT,
+	mcp23017_INPUT
+}
+mcp23017GpioMode;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \fn int openMCP23017 ( const char busName[], const uint8_t address, 
 ///     int * const mcp23017 );
@@ -65,17 +72,17 @@ int closeMCP23017 ( const int mcp23017 );
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \fn int gpioSetDir ( const int mcp23017, const char port, const uint8_t id,
-///     const uint8_t mode );
+///     const mcp23017GpioMode mode );
 /// \param[ in ] mcp23017: file descriptor to access to device
 /// \param[ in ] port: GPIO port ( 'A' / 'B' )
 /// \param[ in ] id: GPIO pin id on port [ 0 ; 7 ]
 /// \param[ in ] mode: 1 input / 0 output
-/// \breif Set GPIO pin dir
+/// \breif Set GPIO pin dir and latch
 /// \return 0: OK
 ///         else see errno
 ////////////////////////////////////////////////////////////////////////////////
 int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, 
-	const uint8_t mode );
+	const mcp23017GpioMode mode );
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \fn int gpioSetPol ( const int mcp23017, const char port, const uint8_t id,

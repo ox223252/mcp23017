@@ -81,17 +81,15 @@ registersBank_1;
 
 static inline uint8_t getPort ( const char port )
 {
-	if ( ( port != 'A' ) &&
-		( port != 'B' ) )
-	{
-		return ( 0xff );
-	}
-
 	if ( port == 'A' )
 	{
 		return ( REGA );
 	}
-	return ( REGB );
+	else if ( port == 'B' )
+	{
+			return ( REGB );
+	}
+	return ( 0xff )
 }
 
 static int configPort ( const int mcp23017 )
@@ -119,32 +117,51 @@ static int configPort ( const int mcp23017 )
 	return ( 0 );
 }
 
-int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const uint8_t mode )
+int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mcp23017GpioMode mode )
 { // IODIR
-	uint8_t buf[ 2 ];
-	buf[ 0 ] = getPort ( port );
+	uint8_t dir[ 2 ];
+	uint8_t lat[ 2 ];
+	dir[ 0 ] = getPort ( port );
+	lat[ 0 ] = dir[ 0 ];
 
-	if ( ( buf[ 0 ] == 0xff ) ||
+	if ( ( dir[ 0 ] == 0xff ) ||
 		( id > 7 ) )
 	{
 		errno = EINVAL;
 		return ( __LINE__ );
 	}
 
-	buf[ 0 ] |= IODIR;
+	dir[ 0 ] |= IODIR;
+	lat[ 0 ] |= OLAT;
 
-	write ( mcp23017, buf, 1 );
-	read ( mcp23017, &buf[ 1 ], 1 );
+	write ( mcp23017, dir, 1 );
+	read ( mcp23017, &dir[ 1 ], 1 );
+
+
+	write ( mcp23017, lat, 1 );
+	read ( mcp23017, &lat[ 1 ], 1 );
 
 	if ( !mode )
 	{ // mode output
-		buf[ 1 ] &= ~( 1 << id );
+		dir[ 1 ] &= ~( 1 << id );
+		lat[ 1 ] |= 1 << id;
 	}
 	else
 	{ // mode input
-		buf[ 1 ] |= 1 << id;
+		dir[ 1 ] |= 1 << id;
+		lat[ 1 ] &= ~( 1 << id );
 	}
-	return ( write ( mcp23017, buf, 2 ) != 2 );
+
+	if ( write ( mcp23017, lat, 2 ) != 2 )
+	{
+		return ( __LINE__ );
+	}
+	if ( write ( mcp23017, dir, 2 ) != 2 )
+	{
+		return ( __LINE__ );
+	}
+	
+	return ( 0 );
 }
 
 int gpioSetPol ( const int mcp23017, const char port , const uint8_t id, const uint8_t mode )
