@@ -122,7 +122,6 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mc
 	uint8_t dir[ 2 ];
 	uint8_t lat[ 2 ];
 	dir[ 0 ] = getPort ( port );
-	lat[ 0 ] = dir[ 0 ];
 
 	if ( ( dir[ 0 ] == 0xff ) ||
 		( id > 7 ) )
@@ -132,30 +131,19 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mc
 	}
 
 	dir[ 0 ] |= IODIR;
-	lat[ 0 ] |= OLAT;
 
 	write ( mcp23017, dir, 1 );
 	read ( mcp23017, &dir[ 1 ], 1 );
 
-
-	write ( mcp23017, lat, 1 );
-	read ( mcp23017, &lat[ 1 ], 1 );
-
 	if ( !mode )
 	{ // mode output
 		dir[ 1 ] &= ~( 1 << id );
-		lat[ 1 ] |= 1 << id;
 	}
 	else
 	{ // mode input
 		dir[ 1 ] |= 1 << id;
-		lat[ 1 ] &= ~( 1 << id );
 	}
 
-	if ( write ( mcp23017, lat, 2 ) != 2 )
-	{
-		return ( __LINE__ );
-	}
 	if ( write ( mcp23017, dir, 2 ) != 2 )
 	{
 		return ( __LINE__ );
@@ -164,7 +152,7 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mc
 	return ( 0 );
 }
 
-int gpioSetPol ( const int mcp23017, const char port , const uint8_t id, const uint8_t mode )
+int gpioInputSetPol ( const int mcp23017, const char port , const uint8_t id, const uint8_t mode )
 { // IPOL
 	uint8_t buf[ 2 ];
 	buf[ 0 ] = getPort ( port );
@@ -349,7 +337,7 @@ uint8_t getInterruptsValue ( const int mcp23017, const char port )
 }
 
 int gpioSet ( const int mcp23017, const char port, const uint8_t id, const uint8_t status )
-{ // GPIO
+{ // OLAT
 	uint8_t buf[ 2 ];
 	buf[ 0 ] = getPort ( port );
 
@@ -360,17 +348,17 @@ int gpioSet ( const int mcp23017, const char port, const uint8_t id, const uint8
 		return ( __LINE__ );
 	}
 
-	buf[ 0 ] |= GPIO;
+	buf[ 0 ] |= OLAT;
 	
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
 	if ( !status )
-	{ // normal mode
+	{ // set to LOW state
 		buf[ 1 ] &= ~( 1 << id );
 	}
 	else
-	{ // inverted mode
+	{ // set to HIGH state
 		buf[ 1 ] |= 1 << id;
 	}
 	return ( write ( mcp23017, buf, 2 ) != 2 );
@@ -397,7 +385,7 @@ uint8_t gpioGet ( const int mcp23017, const char port, const uint8_t id )
 }
 
 int portSet ( const int mcp23017, const char port, const uint8_t status )
-{ // GPIO
+{ // OLAT
 	uint8_t buf[ 2 ];
 	buf[ 0 ] = getPort ( port );
 
@@ -407,7 +395,7 @@ int portSet ( const int mcp23017, const char port, const uint8_t status )
 		return ( __LINE__ );
 	}
 
-	buf[ 0 ] |= GPIO;
+	buf[ 0 ] |= OLAT;
 	buf[ 1 ] = status;
 
 	return ( write ( mcp23017, buf, 2 ) != 2 );

@@ -85,7 +85,7 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id,
 	const mcp23017GpioMode mode );
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn int gpioSetPol ( const int mcp23017, const char port, const uint8_t id,
+/// \fn int gpioInputSetPol ( const int mcp23017, const char port, const uint8_t id,
 ///     const uint8_t mode );
 /// \param[ in ] mcp23017: file descriptor to access to device
 /// \param[ in ] port: GPIO port ( 'A' / 'B' )
@@ -95,7 +95,7 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id,
 /// \return 0: OK
 ///         else see errno
 ////////////////////////////////////////////////////////////////////////////////
-int gpioSetPol ( const int mcp23017, const char port , const uint8_t id, 
+int gpioInputSetPol ( const int mcp23017, const char port , const uint8_t id, 
 	const uint8_t mode );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,8 +113,8 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id,
 	const mcp23017InterruptType mode );
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn int gpioSetPol ( const int mcp23017, const char port, const uint8_t id,
-///     const uint8_t mode );
+/// \fn int gpioSetPullUp ( const int mcp23017, const char port,
+///     const uint8_t id, const uint8_t mode );
 /// \param[ in ] mcp23017: file descriptor to access to device
 /// \param[ in ] port: GPIO port ( 'A' / 'B' )
 /// \param[ in ] id: GPIO pin id on port [ 0 ; 7 ]
