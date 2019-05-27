@@ -112,7 +112,7 @@ static int configPort ( const int mcp23017 )
 		buf[ 1 ] |= 0x20; // sequencial mode not enabled
 		buf[ 1 ] |= 0x02; // int is an active high pin
 	}
-	return ( write ( mcp23017, buf, 2 ) );
+	return ( write ( mcp23017, buf, 2 ) != 2 );
 }
 
 int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mcp23017GpioMode mode )
