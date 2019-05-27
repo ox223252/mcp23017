@@ -94,27 +94,25 @@ static inline uint8_t getPort ( const char port )
 
 static int configPort ( const int mcp23017 )
 {
-	static uint8_t bank = 0; 
+	uint8_t bank = 0;
 	uint8_t buf[ 2 ];
 
-	if ( bank == 0 )
-	{
-		buf[ 0 ] = B0_IOCON;
-	}
-	else
-	{
-		buf [ 0 ] = IOCON;
-	}
+	buf[ 0 ] = REGB | IOCON;
 
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
-	buf[ 1 ] |= 0x80; // pass to bank 1
-	buf[ 1 ] &= ~0x40; // int A for port A & int B for port B
-	buf[ 1 ] |= 0x20; // sequencial mode not enabled 
-	buf[ 1 ] |= 0x02; // int is an active high pin
+	bank = buf[ 1 ] << 7;
 
-	return ( 0 );
+	if ( bank == 0 )
+	{
+		buf[ 0 ] = B0_IOCON_; // set IOCON to use bank 1
+		buf[ 1 ] |= 0x80; // pass to bank 1
+		buf[ 1 ] &= ~0x40; // int A for port A & int B for port B
+		buf[ 1 ] |= 0x20; // sequencial mode not enabled
+		buf[ 1 ] |= 0x02; // int is an active high pin
+	}
+	return ( write ( mcp23017, buf, 2 ) );
 }
 
 int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mcp23017GpioMode mode )
@@ -148,7 +146,7 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mc
 	{
 		return ( __LINE__ );
 	}
-	
+
 	return ( 0 );
 }
 
@@ -165,7 +163,7 @@ int gpioInputSetPol ( const int mcp23017, const char port , const uint8_t id, co
 	}
 
 	buf[ 0 ] |= IPOL;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -207,7 +205,7 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, c
 		case mcp23017_IT_edges:
 		{ // it enabled on edges
 			buf[ 0 ] |= INTCON;
-			
+
 			write ( mcp23017, buf, 1 );
 			read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -284,7 +282,7 @@ int gpioSetPullUp ( const int mcp23017, const char port, const uint8_t id, const
 	}
 
 	buf[ 0 ] |= GPPU;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -311,7 +309,7 @@ uint8_t getInterruptsStatus ( const int mcp23017, const char port )
 	}
 
 	buf[ 0 ] |= INTF;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -329,7 +327,7 @@ uint8_t getInterruptsValue ( const int mcp23017, const char port )
 		return ( 0 );
 	}
 	buf[ 0 ] |= INTCAP;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -349,7 +347,7 @@ int gpioSet ( const int mcp23017, const char port, const uint8_t id, const uint8
 	}
 
 	buf[ 0 ] |= OLAT;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -361,6 +359,7 @@ int gpioSet ( const int mcp23017, const char port, const uint8_t id, const uint8
 	{ // set to HIGH state
 		buf[ 1 ] |= 1 << id;
 	}
+
 	return ( write ( mcp23017, buf, 2 ) != 2 );
 }
 
@@ -377,7 +376,7 @@ uint8_t gpioGet ( const int mcp23017, const char port, const uint8_t id )
 	}
 
 	buf[ 0 ] |= GPIO;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -413,7 +412,7 @@ uint8_t portGet ( const int mcp23017, const char port )
 	}
 
 	buf[ 0 ] |= GPIO;
-	
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 

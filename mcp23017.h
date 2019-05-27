@@ -20,12 +20,12 @@
 #include <stdint.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \file pca9685.h
-/// \brief library used to manage pca9685 micro
+/// \file mcp2317.h
+/// \brief library used to manage mcp2317 micro
 /// \author ox223252
-/// \date 2018-03
+/// \date 2018-04
 /// \copyright GPLv2
-/// \version 0.1
+/// \version 0.2
 /// \warning NONE
 /// \bug NONE
 ////////////////////////////////////////////////////////////////////////////////
