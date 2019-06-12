@@ -1,0 +1,28 @@
+@ after INIT_VAR
+	int mcp23017_fd = 0;
+@ afetr END_CONFIG
+	// INIT_MCP23017
+	#ifdef __CONFIG_ARG_H__
+		if ( openMCP23017 ( mcp23017_i2c, mcp23017_addr, &mcp23017_fd ) )
+		{ // failure case
+		}
+	#else
+		openMCP23017 ( "/dev/i2c-1", 0x20, &mcp23017_fd )
+		{ // failure case
+		}
+	#endif
+	
+	#ifdef __FREEONEXIT_H__
+		if ( setCloseOnExit ( mcp23017_fd ) )
+		{ // failure case
+
+		}
+	#endif
+	// END_MCP23017
+
+@ after END_PROGRAM
+	// RELEASE_MCP23017
+	#ifdef __FREEONEXIT_H__
+		unsetCloseOnExit ( mcp23017_fd );
+	#endif
+	closeMCP23017 ( mcp23017_fd );
