@@ -4,13 +4,11 @@
 	// INIT_MCP23017
 	#ifdef __CONFIG_ARG_H__
 		if ( openMCP23017 ( mcp23017_i2c, mcp23017_addr, &mcp23017_fd ) )
-		{ // failure case
-		}
 	#else
-		openMCP23017 ( "/dev/i2c-1", 0x20, &mcp23017_fd )
-		{ // failure case
-		}
+		if ( openMCP23017 ( "/dev/i2c-1", 0x20, &mcp23017_fd ) )
 	#endif
+	{ // failure case
+	}
 	
 	#ifdef __FREEONEXIT_H__
 		if ( setCloseOnExit ( mcp23017_fd ) )
