@@ -19,13 +19,17 @@
 
 #include <stdint.h>
 
+#ifdef MCP_WITH_THREAD
+#include <pthread.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// \file mcp2317.h
 /// \brief library used to manage mcp2317 micro
 /// \author ox223252
 /// \date 2018-04
 /// \copyright GPLv2
-/// \version 0.2
+/// \version 0.3
 /// \warning NONE
 /// \bug NONE
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,5 +193,21 @@ int portSet ( const int mcp23017, const char port, const uint8_t status );
 /// \return value read or 0 if failed
 ////////////////////////////////////////////////////////////////////////////////
 uint8_t portGet ( const int mcp23017, const char port );
+
+#ifdef MCP_WITH_THREAD
+////////////////////////////////////////////////////////////////////////////////
+/// \fn void setBusMutex ( pthread_mutex_t * const mutex )
+/// \param[ in ] mutex: pointer on mutex
+/// \biref set a mutex for the MCP busif multiple bus used for multiple MCP, you
+///     should set mutex each time is needed or manage mutex manualy
+////////////////////////////////////////////////////////////////////////////////
+void setMCP23017BusMutex ( pthread_mutex_t * const mutex );
+
+////////////////////////////////////////////////////////////////////////////////
+/// \fn void clearBusMutex ( void );
+/// \brief clear mutex set for MCP bus
+////////////////////////////////////////////////////////////////////////////////
+void clearMCP23017BusMutex ( void );
+#endif
 
 #endif

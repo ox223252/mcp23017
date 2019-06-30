@@ -34,6 +34,17 @@
 
 #include "mcp23017.h"
 
+#ifdef MCP_WITH_THREAD
+static pthread_mutex_t * busMutex;
+static int oldStatus = 0;
+#define LOCK_MUTEX if(busMutex){pthread_mutex_lock(busMutex);pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,&oldStatus);}
+#define UNLOCK_MUTEX if(busMutex){pthread_mutex_unlock(busMutex);pthread_setcancelstate(oldStatus,NULL);}
+#else
+#define LOCK_MUTEX
+#define UNLOCK_MUTEX
+#endif
+
+
 enum
 {
 	B0_IODIRA = 0x00,
@@ -99,6 +110,8 @@ static int configPort ( const int mcp23017 )
 
 	buf[ 0 ] = REGB | IOCON;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -112,13 +125,17 @@ static int configPort ( const int mcp23017 )
 		buf[ 1 ] |= 0x20; // sequencial mode not enabled
 		buf[ 1 ] |= 0x02; // int is an active high pin
 	}
-	return ( write ( mcp23017, buf, 2 ) != 2 );
+
+	int result = write ( mcp23017, buf, 2 );
+
+	UNLOCK_MUTEX;
+
+	return ( result != 2 );
 }
 
 int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mcp23017GpioMode mode )
 { // IODIR
 	uint8_t dir[ 2 ];
-	uint8_t lat[ 2 ];
 	dir[ 0 ] = getPort ( port );
 
 	if ( ( dir[ 0 ] == 0xff ) ||
@@ -129,6 +146,8 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mc
 	}
 
 	dir[ 0 ] |= IODIR;
+
+	LOCK_MUTEX;
 
 	write ( mcp23017, dir, 1 );
 	read ( mcp23017, &dir[ 1 ], 1 );
@@ -142,12 +161,15 @@ int gpioSetDir ( const int mcp23017, const char port, const uint8_t id, const mc
 		dir[ 1 ] |= 1 << id;
 	}
 
+	int ret = 0;
 	if ( write ( mcp23017, dir, 2 ) != 2 )
 	{
-		return ( __LINE__ );
+		ret = __LINE__;
 	}
 
-	return ( 0 );
+	UNLOCK_MUTEX;
+
+	return ( ret );
 }
 
 int gpioInputSetPol ( const int mcp23017, const char port , const uint8_t id, const uint8_t mode )
@@ -164,6 +186,8 @@ int gpioInputSetPol ( const int mcp23017, const char port , const uint8_t id, co
 
 	buf[ 0 ] |= IPOL;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -175,7 +199,16 @@ int gpioInputSetPol ( const int mcp23017, const char port , const uint8_t id, co
 	{ // inverted mode
 		buf[ 1 ] |= 1 << id;
 	}
-	return ( write ( mcp23017, buf, 2 ) != 2 );
+
+	int ret = 0;
+	if ( write ( mcp23017, buf, 2 ) != 2 )
+	{
+		ret = __LINE__;
+	}
+
+	UNLOCK_MUTEX;
+
+	return ( ret );
 }
 
 int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, const mcp23017InterruptType mode )
@@ -196,15 +229,24 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, c
 		{ // it disabled
 			buf[ 0 ] |= GPINTEN;
 
+			LOCK_MUTEX;
+
 			write ( mcp23017, buf, 1 );
 			read ( mcp23017, &buf[ 1 ], 1 );
 
 			buf [ 1 ] &= ~( 1 << id );
-			return ( write ( mcp23017, buf, 2 ) != 2 );
+			
+			int ret = write ( mcp23017, buf, 2 );
+
+			UNLOCK_MUTEX;
+
+			return ( ret != 2 );
 		}
 		case mcp23017_IT_edges:
 		{ // it enabled on edges
 			buf[ 0 ] |= INTCON;
+
+			LOCK_MUTEX;
 
 			write ( mcp23017, buf, 1 );
 			read ( mcp23017, &buf[ 1 ], 1 );
@@ -221,12 +263,19 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, c
 			read ( mcp23017, &buf[ 1 ], 1 );
 
 			buf [ 1 ] |= 1 << id;
-			return ( write ( mcp23017, buf, 2 ) != 2 );
+			
+			int ret = write ( mcp23017, buf, 2 );
+
+			UNLOCK_MUTEX;
+
+			return ( ret != 2 );
 		}
 		case mcp23017_IT_high:
 		case mcp23017_IT_low:
 		{ // it enabled on HIGH/LOW state
 			buf[ 0 ] |= DEFVAL;
+
+			LOCK_MUTEX;
 
 			write ( mcp23017, buf, 1 );
 			read ( mcp23017, &buf[ 1 ], 1 );
@@ -242,6 +291,8 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, c
 
 			if ( write ( mcp23017, buf, 2 ) != 2 )
 			{
+				UNLOCK_MUTEX;
+
 				return ( __LINE__ );
 			}
 
@@ -254,6 +305,8 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, c
 			buf [ 1 ] |= 1 << id;
 			if ( write ( mcp23017, buf, 2 ) != 2 )
 			{
+				UNLOCK_MUTEX;
+
 				return ( __LINE__ );
 			}
 			buf[ 0 ] &= ~INTCON;
@@ -262,7 +315,11 @@ int gpioSetInterrupts ( const int mcp23017, const char port, const uint8_t id, c
 			write ( mcp23017, buf, 1 );
 			read ( mcp23017, &buf[ 1 ], 1 );
 
-			return ( write ( mcp23017, buf, 2 ) != 2 );
+			int ret = write ( mcp23017, buf, 2 );
+
+			UNLOCK_MUTEX;
+
+			return ( ret != 2 );
 		}
 	}
 	errno = EINVAL;
@@ -283,6 +340,8 @@ int gpioSetPullUp ( const int mcp23017, const char port, const uint8_t id, const
 
 	buf[ 0 ] |= GPPU;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -294,7 +353,12 @@ int gpioSetPullUp ( const int mcp23017, const char port, const uint8_t id, const
 	{ // pull-up enabled
 		buf[ 1 ] |= 1 << id;
 	}
-	return ( write ( mcp23017, buf, 2 ) != 2 );
+			
+	int ret = write ( mcp23017, buf, 2 );
+
+	UNLOCK_MUTEX;
+
+	return ( ret != 2 );
 }
 
 uint8_t getInterruptsStatus ( const int mcp23017, const char port )
@@ -310,8 +374,12 @@ uint8_t getInterruptsStatus ( const int mcp23017, const char port )
 
 	buf[ 0 ] |= INTF;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
+
+	UNLOCK_MUTEX;
 
 	return ( buf[ 1 ] );
 }
@@ -328,8 +396,12 @@ uint8_t getInterruptsValue ( const int mcp23017, const char port )
 	}
 	buf[ 0 ] |= INTCAP;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
+
+	UNLOCK_MUTEX;
 
 	return ( buf[ 1 ] );
 }
@@ -348,6 +420,8 @@ int gpioSet ( const int mcp23017, const char port, const uint8_t id, const uint8
 
 	buf[ 0 ] |= OLAT;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
 
@@ -360,7 +434,11 @@ int gpioSet ( const int mcp23017, const char port, const uint8_t id, const uint8
 		buf[ 1 ] |= 1 << id;
 	}
 
-	return ( write ( mcp23017, buf, 2 ) != 2 );
+	int ret = write ( mcp23017, buf, 2 );
+
+	UNLOCK_MUTEX;
+
+	return ( ret != 2 );
 }
 
 uint8_t gpioGet ( const int mcp23017, const char port, const uint8_t id )
@@ -377,8 +455,12 @@ uint8_t gpioGet ( const int mcp23017, const char port, const uint8_t id )
 
 	buf[ 0 ] |= GPIO;
 
+	LOCK_MUTEX;
+
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
+
+	UNLOCK_MUTEX;
 
 	return ( ( buf[ 1 ] & ( 1 << id ) ) != 0 );
 }
@@ -397,7 +479,13 @@ int portSet ( const int mcp23017, const char port, const uint8_t status )
 	buf[ 0 ] |= OLAT;
 	buf[ 1 ] = status;
 
-	return ( write ( mcp23017, buf, 2 ) != 2 );
+	LOCK_MUTEX;
+
+	int ret = write ( mcp23017, buf, 2 );
+
+	UNLOCK_MUTEX;
+
+	return ( ret != 2 );
 }
 
 uint8_t portGet ( const int mcp23017, const char port )
@@ -413,8 +501,12 @@ uint8_t portGet ( const int mcp23017, const char port )
 
 	buf[ 0 ] |= GPIO;
 
+	LOCK_MUTEX;
+	
 	write ( mcp23017, buf, 1 );
 	read ( mcp23017, &buf[ 1 ], 1 );
+	
+	UNLOCK_MUTEX;
 
 	return ( buf[ 1 ] );
 }
@@ -427,10 +519,16 @@ int openMCP23017 ( const char busName[], const uint8_t address, int * const mcp2
 		return ( __LINE__ );
 	}
 
+	LOCK_MUTEX;
+
 	if ( ioctl ( *mcp23017, I2C_SLAVE, address ) < 0 )
 	{
+		UNLOCK_MUTEX;
+	
 		return ( __LINE__ );
 	}
+	
+	UNLOCK_MUTEX;
 
 	if ( configPort ( *mcp23017 ) )
 	{
@@ -444,3 +542,15 @@ int closeMCP23017 ( const int mcp23017 )
 {
 	return ( close ( mcp23017 ) );
 }
+
+#ifdef MCP_WITH_THREAD
+void setMCP23017BusMutex ( pthread_mutex_t * const mutex )
+{
+	busMutex = mutex;
+}
+
+void clearMCP23017BusMutex ( void )
+{
+	busMutex = NULL;
+}
+#endif
